@@ -4,9 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/steve-nzr/expirables"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewExpirable(t *testing.T) {

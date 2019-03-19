@@ -42,10 +42,8 @@ func (v *Expirable) Get() interface{} {
 // NewExpirable creates a new Expirable variable with the given Refresher & TTL
 func NewExpirable(refresher ExpirableRefresher, TTL time.Duration) *Expirable {
 	exp := new(Expirable)
-	*exp = Expirable{
-		refresher: refresher,
-		ttl:       TTL,
-	}
+	exp.refresher = refresher
+	exp.ttl = TTL
 
 	return exp.init()
 }
