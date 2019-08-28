@@ -15,10 +15,24 @@ type Expirable struct {
 	ttl        time.Duration
 	value      interface{}
 	expiration time.Time
+	refreshing bool
+}
+
+func (v *Expirable) refresh() {
+	if v.refreshing {
+		return
+	}
+	
+	v.refreshing = true
+	defer func () {
+		v.refreshing = false
+	}()
+	
+	v.set(v.refresher())
 }
 
 func (v *Expirable) init() *Expirable {
-	v.set(v.refresher())
+	v.refresh()
 	return v
 }
 
@@ -33,7 +47,7 @@ func (v *Expirable) set(val interface{}) *Expirable {
 // and potentially slow the function execution
 func (v *Expirable) Get() interface{} {
 	if time.Since(v.expiration) > 0 {
-		go v.set(v.refresher())
+		go v.refresh()
 	}
 
 	return v.value
