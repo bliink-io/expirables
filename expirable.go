@@ -33,7 +33,7 @@ func (v *Expirable) set(val interface{}) *Expirable {
 // and potentially slow the function execution
 func (v *Expirable) Get() interface{} {
 	if time.Since(v.expiration) > 0 {
-		return v.set(v.refresher()).value
+		go v.set(v.refresher())
 	}
 
 	return v.value
