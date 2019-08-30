@@ -1,6 +1,7 @@
 package expirables
 
 import (
+	"golang.org/x/sync/semaphore"
 	"time"
 )
 
@@ -15,19 +16,11 @@ type Expirable struct {
 	ttl        time.Duration
 	value      interface{}
 	expiration time.Time
-	refreshing bool
+	sem        *semaphore.Weighted
 }
 
 func (v *Expirable) refresh() {
-	if v.refreshing {
-		return
-	}
-	
-	v.refreshing = true
-	defer func () {
-		v.refreshing = false
-	}()
-	
+	defer v.sem.Release(1)
 	v.set(v.refresher())
 }
 
@@ -47,7 +40,9 @@ func (v *Expirable) set(val interface{}) *Expirable {
 // and potentially slow the function execution
 func (v *Expirable) Get() interface{} {
 	if time.Since(v.expiration) > 0 {
-		go v.refresh()
+		if v.sem.TryAcquire(1) {
+			go v.refresh()
+		}
 	}
 
 	return v.value
@@ -58,6 +53,7 @@ func NewExpirable(refresher ExpirableRefresher, TTL time.Duration) *Expirable {
 	exp := new(Expirable)
 	exp.refresher = refresher
 	exp.ttl = TTL
+	exp.sem = semaphore.NewWeighted(1)
 
 	return exp.init()
 }
