@@ -29,7 +29,10 @@ func (v *Expirable) refresh() {
 }
 
 func (v *Expirable) init() *Expirable {
-	v.refresh()
+	if v.sem.TryAcquire(1) {
+		defer v.sem.Release(1)
+		v.set(v.refresher())
+	}
 	return v
 }
 
