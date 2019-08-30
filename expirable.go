@@ -20,8 +20,12 @@ type Expirable struct {
 }
 
 func (v *Expirable) refresh() {
-	defer v.sem.Release(1)
-	v.set(v.refresher())
+	if v.sem.TryAcquire(1) {
+		go func() {
+			defer v.sem.Release(1)
+			v.set(v.refresher())
+		}()
+	}
 }
 
 func (v *Expirable) init() *Expirable {
@@ -40,9 +44,7 @@ func (v *Expirable) set(val interface{}) *Expirable {
 // and potentially slow the function execution
 func (v *Expirable) Get() interface{} {
 	if time.Since(v.expiration) > 0 {
-		if v.sem.TryAcquire(1) {
-			go v.refresh()
-		}
+		v.refresh()
 	}
 
 	return v.value
