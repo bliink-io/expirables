@@ -23,9 +23,13 @@ func (v *Expirable) refresh() {
 	if v.sem.TryAcquire(1) {
 		go func() {
 			defer v.sem.Release(1)
-			v.set(v.refresher())
+			v.refreshSync()
 		}()
 	}
+}
+
+func (v *Expirable) refreshSync() {
+	v.set(v.refresher())
 }
 
 func (v *Expirable) init() *Expirable {
@@ -48,6 +52,17 @@ func (v *Expirable) set(val interface{}) *Expirable {
 func (v *Expirable) Get() interface{} {
 	if time.Since(v.expiration) > 0 {
 		v.refresh()
+	}
+
+	return v.value
+}
+
+// Get the value of the stored variable.
+// Calling this function could trigger a synchronous refresh on the value (blocking the current calling context)
+// and potentially slow the function execution
+func (v *Expirable) GetSync() interface{} {
+	if time.Since(v.expiration) > 0 {
+		v.refreshSync()
 	}
 
 	return v.value
