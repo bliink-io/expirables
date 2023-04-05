@@ -1,10 +1,10 @@
 package expirables_test
 
 import (
+	"github.com/bliink-io/expirables"
 	"testing"
 	"time"
 
-	"github.com/steve-nzr/expirables"
 	"github.com/stretchr/testify/assert"
 )
 
